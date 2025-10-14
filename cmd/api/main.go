@@ -4,11 +4,14 @@ import (
 	"context"
 	"database/sql"
 	"flag"
+	"log"
 	"log/slog"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/Rif-7/movie-api/internal/data"
+	"github.com/Rif-7/movie-api/internal/mailer"
 	_ "github.com/lib/pq"
 )
 
@@ -29,12 +32,21 @@ type config struct {
 		burst   int
 		enabled bool
 	}
+
+	smtp struct {
+		host     string
+		port     int
+		username string
+		password string
+		sender   string
+	}
 }
 
 type application struct {
 	config config
 	logger *slog.Logger
 	models data.Models
+	mailer *mailer.Mailer
 }
 
 func main() {
@@ -52,6 +64,24 @@ func main() {
 	flag.IntVar(&cfg.limiter.burst, "limiter-burst", 4, "Rate limiter maximum burst")
 	flag.BoolVar(&cfg.limiter.enabled, "limiter-enabled", true, "Enable rate limiter")
 
+	flag.StringVar(&cfg.smtp.host, "smtp-host", os.Getenv("MAILTRAP_SMTP_HOST"), "SMTP host")
+
+	portStr := os.Getenv("MAILTRAP_SMTP_PORT")
+	defaultSMTPPORT := 2525
+	if portStr != "" {
+		if p, err := strconv.Atoi(portStr); err == nil {
+			defaultSMTPPORT = p
+		} else {
+			log.Printf("Invalid MAILTRAP_SMTP_PORT: %q, using default %d", portStr, defaultSMTPPORT)
+			return
+		}
+	}
+
+	flag.IntVar(&cfg.smtp.port, "smtp-port", defaultSMTPPORT, "SMTP port")
+	flag.StringVar(&cfg.smtp.username, "smtp-username", os.Getenv("MAILTRAP_SMTP_USERNAME"), "SMTP username")
+	flag.StringVar(&cfg.smtp.password, "smtp-password", os.Getenv("MAILTRAP_SMTP_PASSWORD"), "SMTP password")
+	flag.StringVar(&cfg.smtp.sender, "smtp-sender", os.Getenv("MAILTRAP_SMTP_SENDER"), "SMTP sender")
+
 	flag.Parse()
 
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
@@ -65,10 +95,17 @@ func main() {
 	defer db.Close()
 	logger.Info("database connection pool established")
 
+	mailer, err := mailer.New(cfg.smtp.host, cfg.smtp.port, cfg.smtp.username, cfg.smtp.password, cfg.smtp.sender)
+	if err != nil {
+		logger.Error(err.Error())
+		os.Exit(1)
+	}
+
 	app := &application{
 		config: cfg,
 		logger: logger,
 		models: data.NewModels(db),
+		mailer: mailer,
 	}
 
 	err = app.serve()
