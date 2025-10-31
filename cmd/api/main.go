@@ -94,12 +94,14 @@ func main() {
 	flag.StringVar(&cfg.smtp.username, "smtp-username", os.Getenv("MAILTRAP_SMTP_USERNAME"), "SMTP username")
 	flag.StringVar(&cfg.smtp.password, "smtp-password", os.Getenv("MAILTRAP_SMTP_PASSWORD"), "SMTP password")
 	flag.StringVar(&cfg.smtp.sender, "smtp-sender", os.Getenv("MAILTRAP_SMTP_SENDER"), "SMTP sender")
+
 	flag.Func("cors-trusted-origins", "Trusted CORS origins (space separated)", func(val string) error {
 		cfg.cors.trustedOrigins = strings.Fields(val)
 		return nil
 	})
 
 	displayVersion := flag.Bool("version", false, "Display version and exit")
+
 	flag.Parse()
 
 	if *displayVersion {

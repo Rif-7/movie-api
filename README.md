@@ -8,7 +8,7 @@ A production-ready RESTful API for managing movie data with user authentication 
 - **Versioned API** - API versioning support (v1)
 - **Email Integration** - Mailtrap for email delivery (activation tokens, password resets)
 - **Token-based Authentication** - Stateful authentication using bearer tokens
-- **Permission-based Authorization** - Fine-grained permissions (read/write) for users
+- **Permission-based Authorization** - Limit who can read or modify data
 - **Fulltext Search** - PostgreSQL fulltext search on movie titles
 - **Advanced Filtering** - Filter movies by genres with support for multiple filters
 - **Pagination** - Efficient pagination with configurable page size and sorting
@@ -20,6 +20,7 @@ A production-ready RESTful API for managing movie data with user authentication 
 - **Database Migrations** - Uses migrate tool for schema management
 - **Vendored Dependencies** - All dependencies are vendored for reproducible builds
 - **Custom Validator** - Input validation package for data integrity
+- **Embedded Assets** - Uses Go’s embed package to bundle static files and templates into the binary
 - **Julienschmidt/httprouter** - High-performance HTTP router
 
 ## Prerequisites

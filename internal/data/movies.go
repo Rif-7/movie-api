@@ -143,6 +143,11 @@ func (m MovieModel) Delete(id int64) error {
 }
 
 func (m MovieModel) GetAll(title string, genres []string, filters Filters) ([]*Movie, Metadata, error) {
+	// Build a paginated, sortable movie query with optional full-text search and genre filtering.
+	// - Supports title search using PostgreSQL full-text search (`to_tsvector` / `plainto_tsquery`)
+	// - Filters by genres array (`@>` operator)
+	// - Returns total row count via `count(*) OVER()` for pagination metadata
+	// - Dynamically orders by validated column/direction with stable tie-breaker on `id`
 	query := fmt.Sprintf(`
 		SELECT count(*) OVER(), id, created_at, title, year, runtime, genres, version
 		FROM movies

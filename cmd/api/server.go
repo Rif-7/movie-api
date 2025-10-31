@@ -25,6 +25,8 @@ func (app *application) serve() error {
 	shutdownError := make(chan error)
 
 	go func() {
+		// Use a buffered channel here because signal.Notify() does not wait for a
+		// receiver to be available when sending a signal to the quit channel
 		quit := make(chan os.Signal, 1)
 
 		signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)

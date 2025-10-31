@@ -29,7 +29,6 @@ func (app *application) recoverPanic(next http.Handler) http.Handler {
 }
 
 func (app *application) rateLimit(next http.Handler) http.Handler {
-
 	type client struct {
 		limiter  *rate.Limiter
 		lastSeen time.Time
@@ -176,6 +175,8 @@ func (app *application) enableCORS(next http.Handler) http.Handler {
 			for i := range app.config.cors.trustedOrigins {
 				if origin == app.config.cors.trustedOrigins[i] {
 					w.Header().Set("Access-Control-Allow-Origin", origin)
+
+					// Checking if the request is a cors preflight request
 					if r.Method == http.MethodOptions && r.Header.Get("Access-Control-Request-Method") != "" {
 						w.Header().Set("Access-Control-Allow-Methods", "OPTIONS, PUT, PATCH, DELETE")
 						w.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type")
